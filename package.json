@@ -18,7 +18,6 @@
   "author": "Jon K. Bernhardsen",
   "license": "MIT",
   "dependencies": {
-    "es6-promise": "^4.2.4",
     "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
