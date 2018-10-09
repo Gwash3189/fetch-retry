@@ -23,6 +23,7 @@ describe('fetch-retry', function() {
   beforeEach(function() {
     delay = 1000;
     clock = sinon.useFakeTimers();
+    global.setTimeout = sinon.spy(global, 'setTimeout')
   });
 
   afterEach(function() {
@@ -114,6 +115,104 @@ describe('fetch-retry', function() {
     });
 
   });
+
+  describe('when #options.expoential is true', function() {
+    beforeEach(function() {
+      thenCallback = sinon.spy();
+      catchCallback = sinon.spy();
+
+      fetchRetry('http://someurl', { expoential: true })
+        .then(thenCallback)
+        .catch(catchCallback);
+    });
+
+    describe('when first call is a success', function() {
+
+      beforeEach(function() {
+        deferred1.resolve({ status: 200 });
+      });
+
+      describe('when resolved', function() {
+
+        it('invokes the then callback', function() {
+          expect(thenCallback.called).toBe(true);
+        });
+
+        it('calls fetch once', function() {
+          expect(fetch.callCount).toBe(1);
+        });
+
+      });
+
+    });
+
+    describe.only('when first call is a failure', function() {
+
+      beforeEach(function() {
+        deferred1.reject();
+      });
+
+      describe('when second call is a succcess', function() {
+
+        beforeEach(function() {
+          clock.tick(delay * 2);
+          deferred2.resolve({ status: 200 });
+        });
+
+        describe('when resolved', function() {
+
+          it('invokes the then callback', function() {
+            expect(thenCallback.called).toBe(true);
+          });
+
+          it('calls fetch 2', function() {
+            expect(fetch.callCount).toBe(2);
+          });
+
+          it('calls setTimeout with a delay of 1000', function() {
+            expect(setTimeout.lastCall.args[1]).toBe(1000);
+          });
+
+
+        });
+      });
+
+      describe('when second call is a failure', function() {
+
+        beforeEach(function() {
+          deferred2.reject();
+          clock.tick(delay);
+        });
+
+        describe('when third call is a success', function() {
+
+          beforeEach(function() {
+            deferred3.resolve({ status: 200 });
+            clock.tick(delay * 2);
+          });
+
+          describe('when resolved', function() {
+
+            it('invokes the then callback', function() {
+              expect(thenCallback.called).toBe(true);
+            });
+
+            it('calls fetch three times', function() {
+              expect(fetch.callCount).toBe(3);
+            });
+
+            it('calls setTimeout with a delay of 2000', function() {
+              expect(setTimeout.lastCall.args[1]).toBe(2000);
+            });
+
+          });
+
+        });
+
+      })
+
+    })
+  })
 
   describe('when #options.retries=3 (default)', function() {
 

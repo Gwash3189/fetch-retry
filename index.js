@@ -1,14 +1,19 @@
 'use strict';
 require('isomorphic-fetch');
-require('es6-promise').polyfill();
 
 module.exports = function(url, options) {
   var retries = 3;
   var retryDelay = 1000;
   var retryOn = [];
+  var expoential = false
+  var attempts = 1
 
   if (options && options.retries) {
     retries = options.retries;
+  }
+
+  if (options && options.expoential) {
+    expoential = options.expoential
   }
 
   if (options && options.retryDelay) {
@@ -27,14 +32,14 @@ module.exports = function(url, options) {
   }
 
   return new Promise(function(resolve, reject) {
-    var wrappedFetch = function(n) {
+    var wrappedFetch = function(n, attempts) {
       fetch(url, options)
         .then(function(response) {
           if (retryOn.indexOf(response.status) === -1) {
             resolve(response);
           } else {
             if (n > 0) {
-              retry(n);
+              retry(n, attempts);
             } else {
               resolve(response);
             }
@@ -42,19 +47,19 @@ module.exports = function(url, options) {
         })
         .catch(function(error) {
           if (n > 0) {
-            retry(n);
+            retry(n, attempts);
           } else {
             reject(error);
           }
         });
     };
 
-    function retry(n) {
+    function retry(n, attempts) {
       setTimeout(function() {
-          wrappedFetch(--n);
-        }, retryDelay);
+          wrappedFetch(--n, ++attempts);
+        }, retryDelay * attempts);
     }
 
-    wrappedFetch(retries);
+    wrappedFetch(retries, attempts);
   });
 };
