@@ -7,6 +7,11 @@ module.exports = function(url, options) {
   var retryOn = [];
   var expoential = false
   var attempts = 1
+  var beforeRetry = function() { return true }
+
+  if (options && options.onRetry) {
+    beforeRetry = options.onRetry
+  }
 
   if (options && options.retries) {
     retries = options.retries;
@@ -32,14 +37,14 @@ module.exports = function(url, options) {
   }
 
   return new Promise(function(resolve, reject) {
-    var wrappedFetch = function(n, attempts) {
+    var wrappedFetch = function(n, attempts, beforeRetry) {
       fetch(url, options)
         .then(function(response) {
           if (retryOn.indexOf(response.status) === -1) {
             resolve(response);
           } else {
             if (n > 0) {
-              retry(n, attempts);
+              retry(n, attempts, beforeRetry);
             } else {
               resolve(response);
             }
@@ -47,19 +52,22 @@ module.exports = function(url, options) {
         })
         .catch(function(error) {
           if (n > 0) {
-            retry(n, attempts);
+            retry(n, attempts, beforeRetry);
           } else {
             reject(error);
           }
         });
     };
 
-    function retry(n, attempts) {
+    function retry(n, attempts, beforeRetry) {
+      var delayAmount = expoential ? Math.pow(retryDelay, attempts) : retryDelay
+
       setTimeout(function() {
-          wrappedFetch(--n, ++attempts);
-        }, retryDelay * attempts);
+        beforeRetry()
+        wrappedFetch(--n, ++attempts, beforeRetry);
+      }, delayAmount);
     }
 
-    wrappedFetch(retries, attempts);
+    wrappedFetch(retries, attempts, beforeRetry);
   });
 };
