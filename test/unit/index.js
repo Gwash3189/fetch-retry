@@ -116,12 +116,12 @@ describe('fetch-retry', function() {
 
   });
 
-  describe('when #options.expoential is true', function() {
+  describe('when #options.exponential is true', function() {
     beforeEach(function() {
       thenCallback = sinon.spy();
       catchCallback = sinon.spy();
 
-      fetchRetry('http://someurl', { expoential: true })
+      fetchRetry('http://someurl', { exponential: true })
         .then(thenCallback)
         .catch(catchCallback);
     });

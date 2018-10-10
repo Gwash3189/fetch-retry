@@ -5,7 +5,7 @@ module.exports = function(url, options) {
   var retries = 3;
   var retryDelay = 1000;
   var retryOn = [];
-  var expoential = false
+  var exponential = false
   var attempts = 1
   var beforeRetry = function() { return true }
 
@@ -17,8 +17,8 @@ module.exports = function(url, options) {
     retries = options.retries;
   }
 
-  if (options && options.expoential) {
-    expoential = options.expoential
+  if (options && options.exponential) {
+    exponential = options.exponential
   }
 
   if (options && options.retryDelay) {
@@ -60,7 +60,7 @@ module.exports = function(url, options) {
     };
 
     function retry(n, attempts, beforeRetry) {
-      var delayAmount = expoential ? Math.pow(retryDelay, attempts) : retryDelay
+      var delayAmount = exponential ? Math.pow(retryDelay, attempts) : retryDelay
 
       setTimeout(function() {
         beforeRetry()
