@@ -146,7 +146,7 @@ describe('fetch-retry', function() {
 
     });
 
-    describe.only('when first call is a failure', function() {
+    describe('when first call is a failure', function() {
 
       beforeEach(function() {
         deferred1.reject();
@@ -155,7 +155,7 @@ describe('fetch-retry', function() {
       describe('when second call is a succcess', function() {
 
         beforeEach(function() {
-          clock.tick(delay * 2);
+          clock.tick(Math.pow(delay, 2));
           deferred2.resolve({ status: 200 });
         });
 
@@ -170,7 +170,7 @@ describe('fetch-retry', function() {
           });
 
           it('calls setTimeout with a delay of 1000', function() {
-            expect(setTimeout.lastCall.args[1]).toBe(1000);
+            expect(setTimeout.lastCall.args[1]).toBe(Math.pow(delay, 1));
           });
 
 
@@ -188,7 +188,7 @@ describe('fetch-retry', function() {
 
           beforeEach(function() {
             deferred3.resolve({ status: 200 });
-            clock.tick(delay * 2);
+            clock.tick(Math.pow(delay, 3));
           });
 
           describe('when resolved', function() {
@@ -202,7 +202,7 @@ describe('fetch-retry', function() {
             });
 
             it('calls setTimeout with a delay of 2000', function() {
-              expect(setTimeout.lastCall.args[1]).toBe(2000);
+              expect(setTimeout.lastCall.args[1]).toBe(Math.pow(delay, 2));
             });
 
           });
@@ -250,6 +250,26 @@ describe('fetch-retry', function() {
       beforeEach(function() {
         deferred1.reject();
       });
+
+      describe('when #options.onRetry is provided', function() {
+        var onRetry = sinon.spy()
+
+        beforeEach(function() {
+          fetchRetry('http://someurl', { onRetry: onRetry })
+            .then(thenCallback)
+            .catch(catchCallback);
+
+          clock.tick(Math.pow(delay, 2));
+          deferred2.resolve({ status: 200 });
+        })
+
+        it('runs the provided function', function () {
+          setTimeout(function() {
+            expect(onRetry.called).toBe(true)
+          }, Math.pow(delay, 2))
+        })
+
+      })
 
       describe('when second call is a succcess', function() {
 
